@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FAFAF8;
+  --foreground: #1A1A17;
+  --gold: #B8A078;
+  --gold-light: #D4C4A0;
+  --gold-dark: #8B7654;
+  --cream: #FAF6EF;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-dark {
+    @apply bg-gradient-to-r from-neutral-800 to-neutral-700 bg-clip-text text-transparent;
+  }
+
+  .shadow-gold {
+    box-shadow: 0 10px 30px -10px rgba(184, 160, 120, 0.4);
+  }
+
+  .shadow-gold-sm {
+    box-shadow: 0 4px 12px -4px rgba(184, 160, 120, 0.3);
+  }
+
+  .backdrop-blur-navbar {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Border dorado sutil estilo editorial */
+  .border-gold-subtle {
+    border-color: rgba(184, 160, 120, 0.3);
+  }
+
+  /* Divider decorativo con líneas doradas */
+  .gold-divider {
+    position: relative;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #B8A078 50%, transparent);
+  }
+
+  /* Textura sutil de papel para fondos premium */
+  .texture-paper {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(184, 160, 120, 0.08) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  /* Efecto shimmer dorado para botones premium */
+  .btn-shimmer {
+    background: linear-gradient(
+      90deg,
+      #B8A078 0%,
+      #D4C4A0 50%,
+      #B8A078 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+}
+
+/* Scrollbar con estilo Bel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F3EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9B896;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8A078;
+}
