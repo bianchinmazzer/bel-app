@@ -273,7 +273,7 @@ export default function ProductDetail({ product }: Props) {
               />
               <Feature
                 icon={CheckBadgeIcon}
-                text="Más de 27 años distribuyendo calidad"
+                text="Más de 30 años distribuyendo calidad"
               />
             </div>
           </div>

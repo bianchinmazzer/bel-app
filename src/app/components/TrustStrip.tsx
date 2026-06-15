@@ -7,22 +7,19 @@ export default function TrustStrip() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-neutral-400">
           <span className="font-display italic text-lg md:text-xl opacity-60 hover:opacity-100 transition-opacity">
-            L&apos;Oréal
+            Alfaparf
           </span>
-          <span className="font-display text-lg md:text-xl font-bold tracking-widest opacity-60 hover:opacity-100 transition-opacity">
-            WELLA
+          <span className="font-display text-lg md:text-xl font-bold opacity-60 hover:opacity-100 transition-opacity">
+            Exel
           </span>
           <span className="font-display italic text-lg md:text-xl opacity-60 hover:opacity-100 transition-opacity">
             Schwarzkopf
           </span>
-          <span className="font-display text-lg md:text-xl font-bold opacity-60 hover:opacity-100 transition-opacity">
-            ISSUE
-          </span>
-          <span className="font-display italic text-lg md:text-xl opacity-60 hover:opacity-100 transition-opacity">
-            Alfaparf
-          </span>
           <span className="font-display text-lg md:text-xl font-bold tracking-widest opacity-60 hover:opacity-100 transition-opacity">
-            KÉRASTASE
+            YELLOW
+          </span>
+          <span className="font-display text-lg md:text-xl font-bold opacity-60 hover:opacity-100 transition-opacity">
+            Sir Fausto
           </span>
         </div>
       </div>

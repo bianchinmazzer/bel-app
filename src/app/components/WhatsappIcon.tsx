@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { whatsappLink } from "@/lib/contact";
 
 export default function WhatsappIcon() {
   return (
     <Link
-      href="https://wa.me/5492910000000?text=Hola!%20Quiero%20consultar%20por%20productos%20de%20Bel%20Distribuciones"
+      href={whatsappLink("¡Hola! Quiero consultar por productos de Bel Distribuciones")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"

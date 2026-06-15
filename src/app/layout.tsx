@@ -26,7 +26,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Bel Distribuciones | Distribución mayorista de peluquería y hogar",
   description:
-    "27 años distribuyendo productos de peluquería, estética y hogar en Argentina. Más de 600 clientes confían en nosotros. Venta mayorista y minorista.",
+    "Más de 30 años distribuyendo productos de peluquería, estética y hogar en Argentina. Distribuidores oficiales de Alfaparf, Exel, Schwarzkopf, Yellow y Sir Fausto. Venta mayorista y minorista.",
   keywords: [
     "distribución",
     "mayorista",
@@ -51,9 +51,9 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: "https://www.beldistribuciones.com.ar",
     siteName: "Bel Distribuciones",
-    title: "Bel Distribuciones | 27 años distribuyendo en Argentina",
+    title: "Bel Distribuciones | Más de 30 años distribuyendo en Argentina",
     description:
-      "Distribución mayorista de productos de peluquería, estética y hogar. Más de 600 clientes nos eligen.",
+      "Distribución mayorista de productos de peluquería, estética y hogar. Distribuidores oficiales de Alfaparf, Exel, Schwarzkopf, Yellow y Sir Fausto.",
     images: [
       {
         url: "/bel-logo.png",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bel Distribuciones | Distribución mayorista",
     description:
-      "27 años distribuyendo productos de peluquería y hogar. Más de 600 clientes.",
+      "Más de 30 años distribuyendo productos de peluquería y hogar. Empresa familiar.",
     images: ["/bel-logo.png"],
   },
   robots: {
@@ -97,8 +97,8 @@ export default function RootLayout({
               url: "https://www.beldistribuciones.com.ar",
               logo: "https://www.beldistribuciones.com.ar/bel-logo.png",
               description:
-                "Distribución mayorista de productos de peluquería, estética y hogar en Argentina. 27 años de trayectoria y más de 600 clientes.",
-              foundingDate: "1998",
+                "Distribución mayorista de productos de peluquería, estética y hogar en Argentina. Más de 30 años de trayectoria como distribuidores oficiales de Alfaparf, Exel, Schwarzkopf, Yellow y Sir Fausto.",
+              foundingDate: "1993",
               address: {
                 "@type": "PostalAddress",
                 addressCountry: "AR",

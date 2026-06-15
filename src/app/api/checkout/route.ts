@@ -50,9 +50,35 @@ export async function POST(req: NextRequest) {
 
     const isLocalhost = BASE_URL.includes('localhost')
 
+    // Guardar la orden pendiente PRIMERO para obtener su id.
+    // Ese id se usa como external_reference en Mercado Pago: viaja en la URL
+    // de retorno y permite recuperar el pedido en la pantalla de éxito.
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        status: 'pending',
+        customer_name: customer.nombre,
+        customer_email: customer.email,
+        customer_phone: customer.telefono,
+        shipping_address,
+        shipping_method: 'andreani_domicilio',
+        shipping_cost_ars,
+        items,
+        subtotal_ars,
+        total_ars,
+      })
+      .select()
+      .single()
+
+    if (orderError || !order) {
+      console.error('[Checkout] Error guardando orden:', orderError)
+      return NextResponse.json({ error: 'No se pudo crear la orden' }, { status: 500 })
+    }
+
     // Crear preference en Mercado Pago
     const preference = await mpPreference.create({
       body: {
+        external_reference: order.id,
         items: items.map((item) => ({
           id: item.product_id,
           title: item.variant_label ? `${item.name} (${item.variant_label})` : item.name,
@@ -87,30 +113,17 @@ export async function POST(req: NextRequest) {
       throw new Error('Mercado Pago no devolvió init_point')
     }
 
-    // Guardar orden pendiente
-    const { data: order, error: orderError } = await supabase
+    // Vincular la preference a la orden ya creada
+    const { error: updateError } = await supabase
       .from('orders')
-      .insert({
-        mp_preference_id: preference.id,
-        status: 'pending',
-        customer_name: customer.nombre,
-        customer_email: customer.email,
-        customer_phone: customer.telefono,
-        shipping_address,
-        shipping_method: 'andreani_domicilio',
-        shipping_cost_ars,
-        items,
-        subtotal_ars,
-        total_ars,
-      })
-      .select()
-      .single()
+      .update({ mp_preference_id: preference.id })
+      .eq('id', order.id)
 
-    if (orderError) {
-      console.error('[Checkout] Error guardando orden:', orderError)
+    if (updateError) {
+      console.error('[Checkout] Error vinculando preference:', updateError)
     }
 
-    console.log('[Checkout] Orden creada:', order?.id, '| Preference:', preference.id)
+    console.log('[Checkout] Orden creada:', order.id, '| Preference:', preference.id)
 
     return NextResponse.json({ init_point: preference.init_point })
   } catch (err: unknown) {

@@ -5,6 +5,7 @@ import {
   PhoneIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
+import { whatsappLink, WHATSAPP_DISPLAY } from "@/lib/contact";
 
 export default function Footer() {
   return (
@@ -37,12 +38,12 @@ export default function Footer() {
             </div>
             <p className="text-neutral-300 leading-relaxed text-sm mb-5 max-w-sm">
               Distribución mayorista y minorista de productos de peluquería,
-              estética y hogar. Una empresa familiar con 27 años de trayectoria
-              en el mercado argentino.
+              estética y hogar. Una empresa familiar con más de 30 años de
+              trayectoria en el mercado argentino.
             </p>
             <div className="inline-block border border-primary-500/40 rounded-full px-4 py-1.5">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary-300">
-                Desde 1998 · Bahía Blanca
+                Desde 1993 · Bahía Blanca
               </span>
             </div>
           </div>
@@ -101,12 +102,12 @@ export default function Footer() {
                     WhatsApp
                   </p>
                   <a
-                    href="https://wa.me/5492910000000"
+                    href={whatsappLink("¡Hola! Quiero hacer una consulta")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-neutral-200 hover:text-primary-300 transition-colors"
                   >
-                    +54 9 291 000 0000
+                    {WHATSAPP_DISPLAY}
                   </a>
                 </div>
               </li>

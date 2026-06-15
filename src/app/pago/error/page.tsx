@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { XCircleIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { whatsappLink } from '@/lib/contact'
 
 export default function PagoErrorPage() {
   return (
@@ -34,7 +35,7 @@ export default function PagoErrorPage() {
             <ArrowRightIcon className="w-4 h-4" />
           </Link>
           <a
-            href="https://wa.me/5492910000000?text=Hola!%20Tuve%20un%20problema%20con%20mi%20pago"
+            href={whatsappLink('¡Hola! Tuve un problema con mi pago')}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 border border-primary-300 hover:border-primary-500 text-neutral-700 font-medium py-3 px-7 rounded-full transition-colors"

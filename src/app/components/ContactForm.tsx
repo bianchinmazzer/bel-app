@@ -10,6 +10,7 @@ import {
   MapPinIcon,
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
+import { whatsappLink, WHATSAPP_DISPLAY } from "@/lib/contact";
 
 const OWNER_EMAIL = "ventas@beldistribuciones.com.ar";
 
@@ -89,8 +90,8 @@ export default function ContactForm() {
             <ContactCard
               icon={PhoneIcon}
               title="WhatsApp"
-              content="+54 9 291 000 0000"
-              href="https://wa.me/5492910000000"
+              content={WHATSAPP_DISPLAY}
+              href={whatsappLink("¡Hola! Quiero hacer una consulta")}
             />
             <ContactCard
               icon={MapPinIcon}

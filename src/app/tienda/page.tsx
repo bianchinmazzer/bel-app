@@ -103,7 +103,7 @@ export default async function TiendaPage({ searchParams }: PageProps) {
           </h1>
           <p className="text-neutral-600 text-sm md:text-base max-w-2xl">
             {categoriaActual?.description ??
-              'Productos seleccionados con la misma calidad que distribuimos a comercios hace 27 años. Envíos a todo el país.'}
+              'Productos seleccionados con la misma calidad que distribuimos a comercios hace más de 30 años. Envíos a todo el país.'}
           </p>
         </div>
       </div>

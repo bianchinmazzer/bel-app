@@ -31,7 +31,7 @@ export default function HeroSection() {
         <div className="flex items-center justify-center gap-3 mb-8 animate-fade-in">
           <div className="h-px w-12 bg-primary-400" />
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-primary-700">
-            Desde 1998 · Bahía Blanca
+            Desde 1993 · Bahía Blanca
           </span>
           <div className="h-px w-12 bg-primary-400" />
         </div>
@@ -54,7 +54,7 @@ export default function HeroSection() {
           className="text-center text-base md:text-lg text-neutral-600 max-w-2xl mx-auto mb-12 leading-relaxed animate-slide-up"
           style={{ animationDelay: "0.15s", animationFillMode: "backwards" }}
         >
-          Más de dos décadas distribuyendo productos de peluquería, estética y
+          Más de tres décadas distribuyendo productos de peluquería, estética y
           hogar a comercios de todo el país. Una trayectoria construida sobre
           confianza, servicio personalizado y compromiso con cada cliente.
         </p>
@@ -86,7 +86,7 @@ export default function HeroSection() {
           className="mt-24 grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto animate-fade-in"
           style={{ animationDelay: "0.5s", animationFillMode: "backwards" }}
         >
-          <Stat number="27+" label="años de trayectoria" />
+          <Stat number="30+" label="años de trayectoria" />
           <Stat number="600+" label="clientes activos" />
           <Stat number="100%" label="cobertura nacional" />
         </div>

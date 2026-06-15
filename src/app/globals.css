@@ -20,6 +20,13 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Compensa el navbar fijo (~70px) al saltar a una sección con ancla */
+  scroll-padding-top: 5rem;
+}
+
+/* Asegura el offset también cuando el scroll se hace por JS (scrollIntoView) */
+section[id] {
+  scroll-margin-top: 5rem;
 }
 
 @layer utilities {

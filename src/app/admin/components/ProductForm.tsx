@@ -389,8 +389,8 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
               </span>
               <input
                 type="number"
-                value={form.price_pesos}
-                onChange={(e) => setForm({ ...form, price_pesos: Number(e.target.value) })}
+                value={form.price_pesos || ''}
+                onChange={(e) => setForm({ ...form, price_pesos: e.target.value === '' ? 0 : Number(e.target.value) })}
                 required
                 min={0}
                 step={1}
@@ -410,8 +410,8 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
           >
             <input
               type="number"
-              value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+              value={form.stock || ''}
+              onChange={(e) => setForm({ ...form, stock: e.target.value === '' ? 0 : Number(e.target.value) })}
               required
               min={0}
               step={1}
@@ -422,8 +422,8 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
           <FormField label="Peso (gramos)" hint="Para cotizar envío">
             <input
               type="number"
-              value={form.weight_grams}
-              onChange={(e) => setForm({ ...form, weight_grams: Number(e.target.value) })}
+              value={form.weight_grams || ''}
+              onChange={(e) => setForm({ ...form, weight_grams: e.target.value === '' ? 0 : Number(e.target.value) })}
               min={1}
               step={1}
               className={inputClass}

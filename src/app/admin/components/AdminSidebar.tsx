@@ -13,6 +13,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ShoppingBagIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline'
 
 interface Props {
@@ -35,6 +36,7 @@ export default function AdminSidebar({ adminName, adminRole }: Props) {
   const links = [
     { href: '/admin', label: 'Dashboard', icon: HomeIcon },
     { href: '/admin/productos', label: 'Productos', icon: CubeIcon },
+    { href: '/admin/ordenes', label: 'Pedidos', icon: ShoppingCartIcon },
     { href: '/admin/categorias', label: 'Categorías', icon: TagIcon },
   ]
 

@@ -28,33 +28,36 @@ export default function QuienesSomos() {
           {/* Columna texto — más ancha */}
           <div className="lg:col-span-7 space-y-6 text-neutral-700 leading-relaxed">
             <p className="text-lg font-medium text-neutral-800 border-l-4 border-primary-500 pl-5 italic font-display">
-              &ldquo;Empezamos en 1998 con una sola categoría: productos de
-              peluquería. Hoy, 27 años después, distribuimos a más de 600
-              comercios en toda Argentina.&rdquo;
+              &ldquo;Todo empezó en 1993, en Trenque Lauquen, con mi madre
+              vendiendo esponjas y artículos de peluquería. Más de 30 años
+              después, somos distribuidores oficiales de las mejores marcas
+              profesionales.&rdquo;
             </p>
 
             <p>
               <strong className="text-neutral-800">Bel Distribuciones</strong>{" "}
-              nació en Bahía Blanca como un proyecto familiar dedicado a la
-              distribución de productos profesionales para peluquería y
-              estética. Durante casi tres décadas construimos relaciones de
-              confianza con peluquerías, comercios y centros de estética de todo
-              el país.
+              nació en 1993 en Trenque Lauquen como un emprendimiento familiar.
+              Arrancó mi madre, vendiendo esponjas y artículos de peluquería.
+              Con el tiempo, mi padre continuó el negocio y lo transformó en una
+              distribuidora, convirtiéndose en{" "}
+              <strong className="text-neutral-800">
+                distribuidor oficial de Alfaparf
+              </strong>
+              .
             </p>
 
             <p>
-              Hoy damos un paso más: <strong className="text-neutral-800">
-              incorporamos nuevas categorías</strong> — productos para el hogar,
-              cuidado personal y más — y sumamos canales digitales para llegar
-              mejor a nuestros clientes mayoristas y al consumidor final.
+              En el año 2000 la distribuidora se mudó a{" "}
+              <strong className="text-neutral-800">Bahía Blanca</strong>, donde
+              tiene su base hasta hoy, abasteciendo a peluquerías, comercios y
+              centros de estética de la región y de todo el país.
             </p>
 
             <p>
-              La gestión actual está en manos de la segunda generación, que
-              combina la experiencia construida durante 27 años con nuevas
-              herramientas digitales, e-commerce y logística moderna. Seguimos
-              siendo la misma empresa familiar, con la misma atención
-              personalizada de siempre.
+              Hoy la gestión está en manos de la segunda generación, que combina
+              la experiencia de más de tres décadas con nuevas herramientas
+              digitales, e-commerce y logística moderna. Seguimos siendo la
+              misma empresa familiar, con la atención personalizada de siempre.
             </p>
 
             {/* Bullets de valores */}
@@ -62,7 +65,7 @@ export default function QuienesSomos() {
               <ValueItem text="Atención personalizada, cliente por cliente" />
               <ValueItem text="Precios mayoristas competitivos" />
               <ValueItem text="Envíos a todo el país por Andreani" />
-              <ValueItem text="Stock garantizado de marcas líderes" />
+              <ValueItem text="Distribuidores oficiales de primeras marcas" />
             </div>
           </div>
 
@@ -79,24 +82,16 @@ export default function QuienesSomos() {
 
                 <div className="relative space-y-6">
                   <TimelineYear
-                    year="1998"
-                    text="Fundación en Bahía Blanca. Distribución exclusiva de peluquería."
+                    year="1993"
+                    text="Nace en Trenque Lauquen. Mi madre arranca vendiendo esponjas y artículos de peluquería."
                   />
                   <TimelineYear
-                    year="2010"
-                    text="Expansión regional. Llegamos a más de 300 comercios."
-                  />
-                  <TimelineYear
-                    year="2020"
-                    text="Incorporación de la segunda generación al negocio."
-                  />
-                  <TimelineYear
-                    year="2024"
-                    text="Ampliación de rubros: hogar y cuidado personal."
+                    year="2000"
+                    text="La distribuidora se muda a Bahía Blanca, ya como distribuidor oficial de Alfaparf."
                   />
                   <TimelineYear
                     year="Hoy"
-                    text="Más de 600 clientes activos en todo el país."
+                    text="La segunda generación suma e-commerce y envíos a todo el país."
                     highlight
                   />
                 </div>

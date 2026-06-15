@@ -134,7 +134,7 @@ function buildBuyerEmail(order: Order): string {
     <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; color: #26251F; background: #FAFAF8;">
       <div style="background: linear-gradient(135deg, #B8A078 0%, #D4C4A0 100%); padding: 32px 24px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Bel Distribuciones</h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;">Desde 1998</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;">Desde 1993</p>
       </div>
       <div style="padding: 32px 24px;">
         <h2 style="color: #8B7654; font-size: 20px;">¡Gracias por tu compra, ${order.customer_name}!</h2>
@@ -157,7 +157,7 @@ function buildBuyerEmail(order: Order): string {
       </div>
       <div style="background: #26251F; color: #A8A397; padding: 16px; text-align: center; font-size: 11px;">
         <p style="margin: 0;">Bel Distribuciones · Bahía Blanca, Buenos Aires · Argentina</p>
-        <p style="margin: 4px 0 0; color: #B8A078;">27 años distribuyendo calidad</p>
+        <p style="margin: 4px 0 0; color: #B8A078;">Más de 30 años distribuyendo calidad</p>
       </div>
     </div>
   `

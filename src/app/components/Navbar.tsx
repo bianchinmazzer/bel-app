@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import CartIcon from "./CartIcon";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +19,22 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Maneja los links de ancla (/#seccion). En el App Router, un <Link> a la
+  // misma página no scrollea solo, así que lo hacemos a mano cuando ya estamos
+  // en el home. Desde otra ruta dejamos que navegue normal a /#seccion.
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    setIsMenuOpen(false);
+    if (href.startsWith("/#") && pathname === "/") {
+      e.preventDefault();
+      const id = href.slice(2);
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      history.replaceState(null, "", href);
+    }
+  };
 
   const links = [
     { href: "/#inicio", label: "Inicio" },
@@ -71,6 +89,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="text-neutral-700 hover:text-primary-700 transition-colors relative group text-sm font-medium tracking-wide"
               >
                 {link.label}
@@ -103,7 +122,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className="block py-3 px-4 text-neutral-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all text-sm font-medium"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={(e) => handleNavClick(e, link.href)}
               >
                 {link.label}
               </Link>
