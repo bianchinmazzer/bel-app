@@ -7,9 +7,27 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Tienda | Bel Distribuciones',
+  title: 'Tienda online | Productos de peluquería, estética y hogar',
   description:
-    'Comprá online productos de peluquería, estética y hogar. Envíos a todo el país. Precios mayoristas y minoristas.',
+    'Comprá online productos de peluquería, estética y hogar de primeras marcas: Alfaparf, Exel, Schwarzkopf, Yellow y Sir Fausto. Envíos a todo el país. Precios mayoristas y minoristas.',
+  keywords: [
+    'comprar productos de peluquería online',
+    'tienda mayorista peluquería argentina',
+    'productos de estética por mayor',
+    'coloración profesional online',
+    'Sir Fausto barbería',
+    'Alfaparf Argentina',
+    'distribuidora peluquería envíos a todo el país',
+  ],
+  openGraph: {
+    title: 'Tienda online Bel Distribuciones | Peluquería, estética y hogar',
+    description:
+      'Productos profesionales de primeras marcas con envíos a todo el país. Precios mayoristas y minoristas.',
+    url: '/tienda',
+  },
+  alternates: {
+    canonical: '/tienda',
+  },
 }
 
 interface PageProps {

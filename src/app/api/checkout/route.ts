@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mpPreference } from '@/lib/mercadopago'
+import { createGetnetCheckout, isGetnetConfigured } from '@/lib/getnet'
+import { validateCart, CartValidationError } from '@/lib/orders/pricing'
+import { getStoreSettings, calcDiscountCents } from '@/lib/settings'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { CartItem } from '@/types/cart'
-import type { ShippingAddress } from '@/types/order'
+import type { ShippingAddress, PaymentProvider } from '@/types/order'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
@@ -15,47 +18,44 @@ interface CheckoutBody {
   }
   shipping_address: ShippingAddress
   shipping_cost_ars: number
+  /** Pasarela elegida por el cliente. Default: mercadopago. */
+  provider?: PaymentProvider
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CheckoutBody
-    const { items, customer, shipping_address, shipping_cost_ars } = body
+    const { customer, shipping_address, shipping_cost_ars } = body
+    const provider: PaymentProvider = body.provider === 'getnet' ? 'getnet' : 'mercadopago'
 
-    if (!items?.length) {
-      return NextResponse.json({ error: 'El carrito está vacío' }, { status: 400 })
+    if (provider === 'getnet' && !isGetnetConfigured()) {
+      return NextResponse.json(
+        { error: 'El pago con Getnet no está disponible por el momento.' },
+        { status: 503 }
+      )
     }
 
     const supabase = createServiceClient()
 
-    // Validar stock en tiempo real
-    for (const item of items) {
-      const { data: product } = await supabase
-        .from('products')
-        .select('stock, name')
-        .eq('id', item.product_id)
-        .single()
+    // Revalidar carrito contra la DB. Los PRECIOS salen de la base, no del front.
+    const { items, subtotal_ars } = await validateCart(supabase, body.items)
 
-      if (!product || product.stock < item.quantity) {
-        return NextResponse.json(
-          { error: `Stock insuficiente para "${item.name}"` },
-          { status: 409 }
-        )
-      }
-    }
-
-    // Calcular totales (en centavos)
-    const subtotal_ars = items.reduce((sum, i) => sum + i.price_ars * i.quantity, 0)
-    const total_ars = subtotal_ars + shipping_cost_ars
-
-    const isLocalhost = BASE_URL.includes('localhost')
+    // Bonificación: solo aplica al pagar con Mercado Pago. El porcentaje se
+    // configura desde el panel admin. Se calcula en el backend (autoritativo).
+    const settings = await getStoreSettings()
+    const discount_ars =
+      provider === 'mercadopago'
+        ? calcDiscountCents(subtotal_ars, settings.mp_discount_percent)
+        : 0
+    const total_ars = subtotal_ars - discount_ars + shipping_cost_ars
 
     // Guardar la orden pendiente PRIMERO para obtener su id.
-    // Ese id se usa como external_reference en Mercado Pago: viaja en la URL
+    // Ese id se usa como referencia externa en la pasarela: viaja en la URL
     // de retorno y permite recuperar el pedido en la pantalla de éxito.
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
+        payment_provider: provider,
         status: 'pending',
         customer_name: customer.nombre,
         customer_email: customer.email,
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         shipping_cost_ars,
         items,
         subtotal_ars,
+        discount_ars,
         total_ars,
       })
       .select()
@@ -75,58 +76,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No se pudo crear la orden' }, { status: 500 })
     }
 
-    // Crear preference en Mercado Pago
-    const preference = await mpPreference.create({
-      body: {
-        external_reference: order.id,
-        items: items.map((item) => ({
-          id: item.product_id,
-          title: item.variant_label ? `${item.name} (${item.variant_label})` : item.name,
-          quantity: item.quantity,
-          unit_price: Math.max(item.price_ars / 100, 1),
-          currency_id: 'ARS',
-        })),
-        payer: {
-          name: customer.nombre,
-          email: customer.email,
-          phone: { number: customer.telefono },
-        },
-        ...(isLocalhost
-          ? {}
-          : {
-              back_urls: {
-                success: `${BASE_URL}/pago/exito`,
-                pending: `${BASE_URL}/pago/pendiente`,
-                failure: `${BASE_URL}/pago/error`,
-              },
-              auto_return: 'approved' as const,
-              notification_url: `${BASE_URL}/api/webhook`,
-            }),
-        expires: true,
-        expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        // Statement descriptor — lo que ve el cliente en el resumen de tarjeta
-        statement_descriptor: 'BEL DISTRIB',
-      },
-    })
+    const redirect_url =
+      provider === 'getnet'
+        ? await startGetnetCheckout(order.id, items, shipping_cost_ars, supabase)
+        : await startMercadoPagoCheckout(
+            order.id,
+            items,
+            customer,
+            settings.mp_discount_percent,
+            supabase
+          )
 
-    if (!preference.id || !preference.init_point) {
-      throw new Error('Mercado Pago no devolvió init_point')
-    }
+    console.log(`[Checkout] Orden ${order.id} creada | Proveedor: ${provider}`)
 
-    // Vincular la preference a la orden ya creada
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ mp_preference_id: preference.id })
-      .eq('id', order.id)
-
-    if (updateError) {
-      console.error('[Checkout] Error vinculando preference:', updateError)
-    }
-
-    console.log('[Checkout] Orden creada:', order.id, '| Preference:', preference.id)
-
-    return NextResponse.json({ init_point: preference.init_point })
+    return NextResponse.json({ redirect_url })
   } catch (err: unknown) {
+    if (err instanceof CartValidationError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
     const message = err instanceof Error ? err.message : JSON.stringify(err)
     console.error('[Checkout] Error:', message)
     return NextResponse.json(
@@ -134,4 +101,98 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// ---------------------------------------------------------------------------
+// Mercado Pago
+// ---------------------------------------------------------------------------
+async function startMercadoPagoCheckout(
+  orderId: string,
+  items: CartItem[],
+  customer: CheckoutBody['customer'],
+  discountPercent: number,
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<string> {
+  const isLocalhost = BASE_URL.includes('localhost')
+
+  // La bonificación se refleja escalando el precio unitario de cada ítem,
+  // así el total que cobra Mercado Pago ya viene con el descuento aplicado.
+  const factor = 1 - discountPercent / 100
+
+  const preference = await mpPreference.create({
+    body: {
+      external_reference: orderId,
+      items: items.map((item) => ({
+        id: item.product_id,
+        title: item.variant_label ? `${item.name} (${item.variant_label})` : item.name,
+        quantity: item.quantity,
+        unit_price: Math.max((item.price_ars / 100) * factor, 1),
+        currency_id: 'ARS',
+      })),
+      payer: {
+        name: customer.nombre,
+        email: customer.email,
+        phone: { number: customer.telefono },
+      },
+      ...(isLocalhost
+        ? {}
+        : {
+            back_urls: {
+              success: `${BASE_URL}/pago/exito`,
+              pending: `${BASE_URL}/pago/pendiente`,
+              failure: `${BASE_URL}/pago/error`,
+            },
+            auto_return: 'approved' as const,
+            notification_url: `${BASE_URL}/api/webhook`,
+          }),
+      expires: true,
+      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      statement_descriptor: 'BEL DISTRIB',
+    },
+  })
+
+  if (!preference.id || !preference.init_point) {
+    throw new Error('Mercado Pago no devolvió init_point')
+  }
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ mp_preference_id: preference.id })
+    .eq('id', orderId)
+
+  if (error) console.error('[Checkout] Error vinculando preference:', error)
+
+  return preference.init_point
+}
+
+// ---------------------------------------------------------------------------
+// Getnet
+// ---------------------------------------------------------------------------
+async function startGetnetCheckout(
+  orderId: string,
+  items: CartItem[],
+  shippingCents: number,
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<string> {
+  const { checkoutId, redirectUrl } = await createGetnetCheckout({
+    items: items.map((item) => ({
+      name: item.variant_label ? `${item.name} (${item.variant_label})` : item.name,
+      amountCents: item.price_ars * item.quantity,
+    })),
+    shippingCents,
+    urls: {
+      success: `${BASE_URL}/pago/exito`,
+      failure: `${BASE_URL}/pago/error`,
+      notification: `${BASE_URL}/api/webhook/getnet`,
+    },
+  })
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ getnet_checkout_id: checkoutId })
+    .eq('id', orderId)
+
+  if (error) console.error('[Checkout] Error vinculando checkout Getnet:', error)
+
+  return redirectUrl
 }

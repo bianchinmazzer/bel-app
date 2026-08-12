@@ -39,9 +39,9 @@ export default function Navbar() {
   const links = [
     { href: "/#inicio", label: "Inicio" },
     { href: "/#nosotros", label: "Nosotros" },
-    { href: "/#servicios", label: "Servicios" },
-    { href: "/#categorias", label: "Categorías" },
     { href: "/tienda", label: "Tienda" },
+    { href: "/mayoristas", label: "Mayoristas" },
+    { href: "/blog", label: "Blog" },
     { href: "/#contacto", label: "Contacto" },
   ];
 

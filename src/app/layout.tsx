@@ -3,6 +3,7 @@ import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import SiteChrome from "./components/SiteChrome";
+import SchemaOrg from "./components/SchemaOrg";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -73,6 +74,17 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  // Código de verificación de Google Search Console (propiedad de prefijo de URL).
+  verification: {
+    google: "LT5B-B_YLovGtpVb-vJcyVIj87iTGrY81DQZQAxKvBw",
   },
   other: {
     "theme-color": "#B8A078",
@@ -86,37 +98,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "Bel Distribuciones",
-              url: "https://www.beldistribuciones.com.ar",
-              logo: "https://www.beldistribuciones.com.ar/bel-logo.png",
-              description:
-                "Distribución mayorista de productos de peluquería, estética y hogar en Argentina. Más de 30 años de trayectoria como distribuidores oficiales de Alfaparf, Exel, Schwarzkopf, Yellow y Sir Fausto.",
-              foundingDate: "1993",
-              address: {
-                "@type": "PostalAddress",
-                addressCountry: "AR",
-                addressRegion: "Buenos Aires",
-                addressLocality: "Bahía Blanca",
-              },
-              contactPoint: {
-                "@type": "ContactPoint",
-                contactType: "customer service",
-                availableLanguage: "Spanish",
-              },
-            }),
-          }}
-        />
-      </head>
       <body
         className={`${inter.variable} ${playfair.variable} ${jetbrains.variable} font-sans antialiased bg-neutral-50 text-neutral-800`}
       >
+        <SchemaOrg />
         <SiteChrome>{children}</SiteChrome>
         <Analytics />
       </body>

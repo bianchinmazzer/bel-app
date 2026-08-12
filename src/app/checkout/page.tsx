@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useCart } from '@/store/cart'
 import PriceDisplay from '@/app/components/PriceDisplay'
-import type { ShippingAddress } from '@/types/order'
+import type { ShippingAddress, PaymentProvider } from '@/types/order'
 
 interface QuoteResponse {
   costo_ars: number
@@ -23,6 +23,9 @@ interface QuoteResponse {
   dias_estimados: string
   estimado: boolean
 }
+
+/** Getnet solo se ofrece cuando está habilitado por env (credenciales listas). */
+const GETNET_ENABLED = process.env.NEXT_PUBLIC_GETNET_ENABLED === 'true'
 
 export default function CheckoutPage() {
   const { items } = useCart()
@@ -43,18 +46,32 @@ export default function CheckoutPage() {
     codigo_postal: '',
   })
   const [shipping, setShipping] = useState<QuoteResponse | null>(null)
+  const [provider, setProvider] = useState<PaymentProvider>('mercadopago')
+  const [mpDiscountPercent, setMpDiscountPercent] = useState(0)
   const [quoting, setQuoting] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => setMounted(true), [])
   useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((d) => setMpDiscountPercent(Number(d.mp_discount_percent) || 0))
+      .catch(() => {})
+  }, [])
+  useEffect(() => {
     if (mounted && items.length === 0) router.push('/carrito')
   }, [mounted, items, router])
 
   const subtotal = items.reduce((sum, i) => sum + i.price_ars * i.quantity, 0)
   const pesoTotal = items.reduce((sum, i) => sum + i.weight_grams * i.quantity, 0)
-  const total = subtotal + (shipping?.costo_ars ?? 0)
+  // La bonificación por Mercado Pago se muestra acá; el backend la recalcula y
+  // es el valor autoritativo de lo que efectivamente se cobra.
+  const discount =
+    provider === 'mercadopago' && mpDiscountPercent > 0
+      ? Math.round((subtotal * mpDiscountPercent) / 100)
+      : 0
+  const total = subtotal - discount + (shipping?.costo_ars ?? 0)
 
   const handleCotizar = async () => {
     if (!address.codigo_postal || address.codigo_postal.length < 4) {
@@ -103,11 +120,12 @@ export default function CheckoutPage() {
           customer,
           shipping_address: address,
           shipping_cost_ars: shipping.costo_ars,
+          provider,
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error procesando el pago')
-      window.location.href = data.init_point
+      window.location.href = data.redirect_url
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error procesando el pago')
       setLoading(false)
@@ -309,6 +327,14 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <PriceDisplay centavos={subtotal} />
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-700 font-medium">
+                    <span>Bonificación Mercado Pago (-{mpDiscountPercent}%)</span>
+                    <span>
+                      -<PriceDisplay centavos={discount} className="inline" />
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between text-neutral-600">
                   <span>Envío</span>
                   {shipping ? (
@@ -327,6 +353,35 @@ export default function CheckoutPage() {
                 />
               </div>
 
+              {GETNET_ENABLED && (
+                <div className="mb-5">
+                  <p className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+                    Medio de pago
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        { id: 'mercadopago', label: 'Mercado Pago' },
+                        { id: 'getnet', label: 'Getnet · 3 cuotas sin interés' },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setProvider(opt.id)}
+                        className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                          provider === opt.id
+                            ? 'border-primary-500 bg-primary-50 text-primary-800'
+                            : 'border-primary-200 bg-white text-neutral-600 hover:border-primary-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">
                   {error}
@@ -340,12 +395,16 @@ export default function CheckoutPage() {
               >
                 <CreditCardIcon className="w-5 h-5" strokeWidth={1.5} />
                 <span>
-                  {loading ? 'Procesando...' : 'Pagar con Mercado Pago'}
+                  {loading
+                    ? 'Procesando...'
+                    : provider === 'getnet'
+                      ? 'Pagar con Getnet'
+                      : 'Pagar con Mercado Pago'}
                 </span>
               </button>
               <p className="text-xs text-neutral-500 text-center mt-3">
-                Serás redirigido a Mercado Pago para completar el pago de forma
-                segura.
+                Serás redirigido a {provider === 'getnet' ? 'Getnet' : 'Mercado Pago'}{' '}
+                para completar el pago de forma segura.
               </p>
             </div>
           </div>
