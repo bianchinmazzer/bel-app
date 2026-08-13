@@ -28,13 +28,13 @@ export default async function CategoriasDestacadas() {
   return (
     <section
       id="categorias"
-      className="py-24 md:py-32 px-4 bg-neutral-800 text-neutral-50 relative overflow-hidden"
+      className="py-16 md:py-24 px-4 bg-neutral-800 text-neutral-50 relative overflow-hidden"
     >
       {/* Detalle dorado decorativo */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
 
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="h-px w-8 bg-primary-400" />
@@ -42,7 +42,7 @@ export default async function CategoriasDestacadas() {
                 Nuestras categorías
               </span>
             </div>
-            <h2 className="font-display font-bold text-4xl md:text-5xl leading-tight">
+            <h2 className="font-display font-bold text-3xl md:text-4xl leading-tight">
               Todo lo que necesitás,{" "}
               <span className="italic text-primary-300">en un solo lugar</span>
             </h2>
@@ -61,7 +61,7 @@ export default async function CategoriasDestacadas() {
             <Link
               key={cat.id}
               href={`/tienda?categoria=${cat.slug}`}
-              className="group relative block overflow-hidden rounded-2xl bg-neutral-700 aspect-[4/5] hover:ring-2 hover:ring-primary-400 transition-all duration-300"
+              className="group relative block overflow-hidden rounded-2xl bg-neutral-700 aspect-[4/3] hover:ring-2 hover:ring-primary-400 transition-all duration-300"
             >
               {cat.image_url ? (
                 <Image
@@ -86,11 +86,11 @@ export default async function CategoriasDestacadas() {
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
 
               {/* Contenido */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-300 mb-2">
+              <div className="absolute inset-0 flex flex-col justify-end p-5 md:p-6">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary-300 mb-1.5">
                   0{idx + 1}
                 </p>
-                <h3 className="font-display font-bold text-2xl md:text-3xl text-white mb-2 leading-tight">
+                <h3 className="font-display font-bold text-xl md:text-2xl text-white mb-1.5 leading-tight">
                   {cat.name}
                 </h3>
                 {cat.description && (
