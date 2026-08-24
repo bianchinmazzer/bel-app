@@ -16,6 +16,53 @@ export default function SettingsManager({ initialSettings }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
+  // Caja estándar de despacho (para cotizar el volumen del envío).
+  const [box, setBox] = useState({
+    largo: String(initialSettings.box.largo_cm),
+    ancho: String(initialSettings.box.ancho_cm),
+    alto: String(initialSettings.box.alto_cm),
+  })
+  const [savingBox, setSavingBox] = useState(false)
+  const [boxError, setBoxError] = useState<string | null>(null)
+  const [boxSaved, setBoxSaved] = useState(false)
+
+  const handleSaveBox = async () => {
+    const largo = Number(box.largo)
+    const ancho = Number(box.ancho)
+    const alto = Number(box.alto)
+    if ([largo, ancho, alto].some((d) => !Number.isFinite(d) || d < 1 || d > 150)) {
+      setBoxError('Cada medida debe ser un número entre 1 y 150 cm')
+      return
+    }
+    setSavingBox(true)
+    setBoxError(null)
+    setBoxSaved(false)
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          box_largo_cm: largo,
+          box_ancho_cm: ancho,
+          box_alto_cm: alto,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error al guardar')
+      setBox({
+        largo: String(data.settings.box.largo_cm),
+        ancho: String(data.settings.box.ancho_cm),
+        alto: String(data.settings.box.alto_cm),
+      })
+      setBoxSaved(true)
+      setTimeout(() => setBoxSaved(false), 3000)
+    } catch (err) {
+      setBoxError(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setSavingBox(false)
+    }
+  }
+
   // Diagnóstico de conexión con Getnet
   const [testing, setTesting] = useState(false)
   const [getnetResult, setGetnetResult] = useState<{ ok: boolean; message: string } | null>(
@@ -111,6 +158,72 @@ export default function SettingsManager({ initialSettings }: Props) {
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
           {saved && (
+            <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
+              <CheckCircleIcon className="w-5 h-5" />
+              Guardado
+            </span>
+          )}
+        </div>
+      </section>
+
+      <section className="bg-white rounded-2xl border border-primary-100 p-6 md:p-8 mt-6">
+        <h2 className="font-display font-bold text-xl text-neutral-800 mb-1">
+          Caja de despacho
+        </h2>
+        <p className="text-sm text-neutral-600 mb-6">
+          Medidas de la caja estándar con la que despachás. Se usan para{' '}
+          <strong>cotizar el envío</strong> por volumen. Ajustalas si cambiás el
+          tamaño de caja habitual.
+        </p>
+
+        <div className="flex flex-wrap gap-4">
+          {(
+            [
+              ['largo', 'Largo'],
+              ['ancho', 'Ancho'],
+              ['alto', 'Alto'],
+            ] as const
+          ).map(([key, label]) => (
+            <div key={key}>
+              <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+                {label}
+              </label>
+              <div className="relative w-28">
+                <input
+                  type="number"
+                  min={1}
+                  max={150}
+                  step={1}
+                  value={box[key]}
+                  onChange={(e) => {
+                    setBox((b) => ({ ...b, [key]: e.target.value }))
+                    setBoxSaved(false)
+                  }}
+                  className="w-full pl-4 pr-10 py-3 border border-primary-200 rounded-lg bg-neutral-50 focus:bg-white focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all text-lg font-semibold"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">
+                  cm
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {boxError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mt-4">
+            {boxError}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 mt-6">
+          <button
+            onClick={handleSaveBox}
+            disabled={savingBox}
+            className="bg-neutral-800 hover:bg-primary-700 disabled:bg-neutral-300 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors"
+          >
+            {savingBox ? 'Guardando...' : 'Guardar medidas'}
+          </button>
+          {boxSaved && (
             <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
               <CheckCircleIcon className="w-5 h-5" />
               Guardado

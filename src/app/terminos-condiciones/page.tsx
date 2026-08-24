@@ -49,7 +49,7 @@ export default function TerminosPage() {
           </Section>
 
           <Section title="5. Envíos">
-            Realizamos envíos a todo el país mediante Andreani. Los tiempos de
+            Realizamos envíos a todo el país mediante Correo Argentino. Los tiempos de
             entrega estimados son de 3 a 7 días hábiles desde la confirmación
             del pago. Los costos de envío se calculan según el destino y el
             peso del paquete.

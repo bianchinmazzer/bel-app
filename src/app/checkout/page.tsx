@@ -8,7 +8,6 @@ import {
   UserIcon,
   EnvelopeIcon,
   PhoneIcon,
-  MapPinIcon,
   TruckIcon,
   CreditCardIcon,
   ArrowLeftIcon,
@@ -46,6 +45,7 @@ export default function CheckoutPage() {
     codigo_postal: '',
   })
   const [shipping, setShipping] = useState<QuoteResponse | null>(null)
+  const [deliveryType, setDeliveryType] = useState<'D' | 'S'>('D')
   const [provider, setProvider] = useState<PaymentProvider>('mercadopago')
   const [mpDiscountPercent, setMpDiscountPercent] = useState(0)
   const [quoting, setQuoting] = useState(false)
@@ -73,6 +73,12 @@ export default function CheckoutPage() {
       : 0
   const total = subtotal - discount + (shipping?.costo_ars ?? 0)
 
+  // Cambiar domicilio/sucursal obliga a recotizar (cambia el precio).
+  const changeDeliveryType = (dt: 'D' | 'S') => {
+    setDeliveryType(dt)
+    setShipping(null)
+  }
+
   const handleCotizar = async () => {
     if (!address.codigo_postal || address.codigo_postal.length < 4) {
       setError('Ingresá un código postal válido')
@@ -87,10 +93,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           cp_destino: address.codigo_postal,
           peso_gramos: pesoTotal,
-          largo_cm: 30,
-          ancho_cm: 20,
-          alto_cm: 15,
           valor_declarado: Math.floor(subtotal / 100),
+          delivery_type: deliveryType,
         }),
       })
       const data = await res.json()
@@ -120,6 +124,7 @@ export default function CheckoutPage() {
           customer,
           shipping_address: address,
           shipping_cost_ars: shipping.costo_ars,
+          delivery_type: deliveryType,
           provider,
         }),
       })
@@ -197,37 +202,80 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Dirección */}
+            {/* Envío */}
             <section className="bg-white rounded-2xl border border-primary-100 p-6 md:p-8">
               <div className="flex items-center gap-2 mb-5">
-                <MapPinIcon className="w-5 h-5 text-primary-600" strokeWidth={1.5} />
+                <TruckIcon className="w-5 h-5 text-primary-600" strokeWidth={1.5} />
                 <h2 className="font-display font-bold text-xl text-neutral-800">
-                  Dirección de envío
+                  Envío
                 </h2>
               </div>
+
+              {/* Selector domicilio / sucursal */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {(
+                  [
+                    ['D', 'A domicilio', 'Te lo llevamos a la puerta'],
+                    ['S', 'A sucursal', 'Retirás en Correo Argentino'],
+                  ] as const
+                ).map(([value, title, subtitle]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => changeDeliveryType(value)}
+                    className={`text-left rounded-xl border p-4 transition-colors ${
+                      deliveryType === value
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-100'
+                        : 'border-primary-200 bg-neutral-50 hover:border-primary-300'
+                    }`}
+                  >
+                    <span className="block font-display font-bold text-neutral-800">
+                      {title}
+                    </span>
+                    <span className="block text-xs text-neutral-500 mt-0.5">
+                      {subtitle}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
-                  <Input
-                    label="Calle"
-                    value={address.calle}
-                    onChange={(v) => setAddress({ ...address, calle: v })}
-                    required
-                  />
-                  <Input
-                    label="Número"
-                    value={address.numero}
-                    onChange={(v) => setAddress({ ...address, numero: v })}
-                    required
-                  />
-                </div>
-                <Input
-                  label="Piso / Dpto (opcional)"
-                  value={address.piso_dpto}
-                  onChange={(v) => setAddress({ ...address, piso_dpto: v })}
-                />
+                {deliveryType === 'D' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                      <Input
+                        label="Calle"
+                        value={address.calle}
+                        onChange={(v) => setAddress({ ...address, calle: v })}
+                        required
+                      />
+                      <Input
+                        label="Número"
+                        value={address.numero}
+                        onChange={(v) => setAddress({ ...address, numero: v })}
+                        required
+                      />
+                    </div>
+                    <Input
+                      label="Piso / Dpto (opcional)"
+                      value={address.piso_dpto}
+                      onChange={(v) => setAddress({ ...address, piso_dpto: v })}
+                    />
+                  </>
+                )}
+
+                {deliveryType === 'S' && (
+                  <p className="text-sm text-neutral-600 bg-neutral-50 border border-primary-100 rounded-lg p-3">
+                    Retirás tu pedido en una sucursal de Correo Argentino.
+                    Ingresá tu <strong>localidad y código postal</strong> para
+                    calcular el costo; <strong>coordinamos la sucursal exacta por
+                    WhatsApp</strong> después de la compra.
+                  </p>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Ciudad"
+                    label="Ciudad / Localidad"
                     value={address.ciudad}
                     onChange={(v) => setAddress({ ...address, ciudad: v })}
                     required
@@ -264,7 +312,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <TruckIcon className="w-5 h-5 text-primary-700" strokeWidth={1.5} />
                   <h2 className="font-display font-bold text-lg text-neutral-800">
-                    Envío por Andreani
+                    Envío por Correo Argentino
                   </h2>
                 </div>
                 <div className="flex items-center justify-between">

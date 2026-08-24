@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
         name: body.name,
         slug: body.slug,
         description: body.description,
+        image_url: body.image_url ?? null,
         position: nextPosition,
         active: true,
       })

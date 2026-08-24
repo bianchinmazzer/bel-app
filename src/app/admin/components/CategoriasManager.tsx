@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
   CheckIcon,
   XMarkIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline'
 import type { Category } from '@/types/product'
 import { slugify } from '@/lib/formatters'
@@ -16,21 +18,29 @@ interface Props {
   initialCategorias: Category[]
 }
 
+interface CategoryForm {
+  name: string
+  slug: string
+  description: string
+  image_url: string | null
+}
+
 export default function CategoriasManager({ initialCategorias }: Props) {
   const router = useRouter()
   const [categorias, setCategorias] = useState<Category[]>(initialCategorias)
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<CategoryForm>({
     name: '',
     slug: '',
     description: '',
+    image_url: null,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const startCreate = () => {
     setError(null)
-    setEditForm({ name: '', slug: '', description: '' })
+    setEditForm({ name: '', slug: '', description: '', image_url: null })
     setEditingId('new')
   }
 
@@ -40,6 +50,7 @@ export default function CategoriasManager({ initialCategorias }: Props) {
       name: cat.name,
       slug: cat.slug,
       description: cat.description ?? '',
+      image_url: cat.image_url,
     })
     setEditingId(cat.id)
   }
@@ -62,6 +73,7 @@ export default function CategoriasManager({ initialCategorias }: Props) {
         name: editForm.name.trim(),
         slug: editForm.slug.trim() || slugify(editForm.name),
         description: editForm.description.trim() || null,
+        image_url: editForm.image_url,
       }
 
       const isNew = editingId === 'new'
@@ -256,16 +268,98 @@ function EditForm({
   saving,
   title,
 }: {
-  form: { name: string; slug: string; description: string }
-  setForm: (f: { name: string; slug: string; description: string }) => void
+  form: CategoryForm
+  setForm: (f: CategoryForm) => void
   onSave: () => void
   onCancel: () => void
   saving: boolean
   title: string
 }) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const handleFileSelected = async (file: File | null) => {
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'categories')
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error subiendo imagen')
+
+      setForm({ ...form, image_url: data.url })
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Error subiendo imagen')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="bg-white border border-primary-300 rounded-2xl p-5 space-y-4 shadow-gold-sm">
       <h3 className="font-display font-bold text-lg text-neutral-800">{title}</h3>
+
+      {/* Foto de portada */}
+      <div>
+        <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+          Foto de portada
+        </label>
+        <div className="flex items-center gap-4">
+          <div className="relative w-28 h-20 rounded-lg overflow-hidden bg-neutral-100 border border-primary-200 flex-shrink-0">
+            {form.image_url ? (
+              <Image
+                src={form.image_url}
+                alt="Portada de la categoría"
+                fill
+                className="object-cover"
+                sizes="112px"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
+                <PhotoIcon className="w-7 h-7" strokeWidth={1.5} />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="inline-flex items-center gap-1.5 cursor-pointer border border-primary-300 hover:border-primary-500 text-neutral-700 text-sm font-medium py-2 px-4 rounded-lg transition-colors w-fit">
+              <PhotoIcon className="w-4 h-4" />
+              <span>
+                {uploading
+                  ? 'Subiendo...'
+                  : form.image_url
+                    ? 'Cambiar foto'
+                    : 'Subir foto'}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
+              />
+            </label>
+            {form.image_url && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, image_url: null })}
+                className="text-xs text-neutral-500 hover:text-red-600 transition-colors w-fit"
+              >
+                Quitar foto
+              </button>
+            )}
+          </div>
+        </div>
+        {uploadError && (
+          <p className="text-xs text-red-600 mt-2">{uploadError}</p>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

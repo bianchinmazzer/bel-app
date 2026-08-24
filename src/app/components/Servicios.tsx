@@ -19,7 +19,7 @@ export default function Servicios() {
       icon: TruckIcon,
       title: "Envíos a todo el país",
       description:
-        "Despachos por Andreani con seguimiento. Entregas en 3-7 días hábiles desde nuestro depósito en Bahía Blanca.",
+        "Despachos por Correo Argentino con seguimiento. Entregas en 3-7 días hábiles desde nuestro depósito en Bahía Blanca.",
     },
     {
       icon: UserGroupIcon,

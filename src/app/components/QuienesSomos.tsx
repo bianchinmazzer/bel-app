@@ -64,7 +64,7 @@ export default function QuienesSomos() {
             <div className="pt-4 space-y-3">
               <ValueItem text="Atención personalizada, cliente por cliente" />
               <ValueItem text="Precios mayoristas competitivos" />
-              <ValueItem text="Envíos a todo el país por Andreani" />
+              <ValueItem text="Envíos a todo el país por Correo Argentino" />
               <ValueItem text="Distribuidores oficiales de primeras marcas" />
             </div>
           </div>

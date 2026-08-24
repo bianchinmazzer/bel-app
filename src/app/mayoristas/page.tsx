@@ -188,7 +188,7 @@ export default function MayoristasPage() {
           />
           <VentajaItem
             title="Envíos a todo el país"
-            text="Despachos por Andreani con seguimiento, en 3 a 7 días hábiles desde Bahía Blanca."
+            text="Despachos por Correo Argentino con seguimiento, en 3 a 7 días hábiles desde Bahía Blanca."
           />
           <VentajaItem
             title="Atención personalizada"

@@ -18,6 +18,8 @@ interface CheckoutBody {
   }
   shipping_address: ShippingAddress
   shipping_cost_ars: number
+  /** 'D' domicilio (default) | 'S' sucursal. */
+  delivery_type?: 'D' | 'S'
   /** Pasarela elegida por el cliente. Default: mercadopago. */
   provider?: PaymentProvider
 }
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CheckoutBody
     const { customer, shipping_address, shipping_cost_ars } = body
+    const deliveryType: 'D' | 'S' = body.delivery_type === 'S' ? 'S' : 'D'
     const provider: PaymentProvider = body.provider === 'getnet' ? 'getnet' : 'mercadopago'
 
     if (provider === 'getnet' && !isGetnetConfigured()) {
@@ -61,7 +64,10 @@ export async function POST(req: NextRequest) {
         customer_email: customer.email,
         customer_phone: customer.telefono,
         shipping_address,
-        shipping_method: 'andreani_domicilio',
+        // El tipo de entrega (domicilio/sucursal) queda codificado acá; así el
+        // checkout no depende de la migración 005 para funcionar.
+        shipping_method:
+          deliveryType === 'S' ? 'correo_argentino_sucursal' : 'correo_argentino_domicilio',
         shipping_cost_ars,
         items,
         subtotal_ars,

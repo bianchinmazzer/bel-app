@@ -265,7 +265,7 @@ export default function ProductDetail({ product }: Props) {
             <div className="mt-8 pt-8 border-t border-primary-100 space-y-3">
               <Feature
                 icon={TruckIcon}
-                text="Envíos a todo el país por Andreani"
+                text="Envíos a todo el país por Correo Argentino"
               />
               <Feature
                 icon={ShieldCheckIcon}

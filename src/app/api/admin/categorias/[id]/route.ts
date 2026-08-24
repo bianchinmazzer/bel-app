@@ -38,6 +38,7 @@ export async function PUT(req: NextRequest, { params }: Props) {
       description: body.description,
     }
     if (typeof body.active === 'boolean') updateData.active = body.active
+    if (body.image_url !== undefined) updateData.image_url = body.image_url
 
     const { data: category, error } = await supabase
       .from('categories')

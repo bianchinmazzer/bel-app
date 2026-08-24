@@ -78,7 +78,7 @@ export default function OrderActions({
       </select>
 
       <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-        Nº de seguimiento (Andreani)
+        Nº de seguimiento (Correo Argentino)
       </label>
       <input
         value={tracking}

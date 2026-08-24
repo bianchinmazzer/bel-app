@@ -27,7 +27,7 @@ export default function PrivacidadPage() {
           <Section title="1. Datos que recopilamos">
             Cuando hacés una compra recopilamos: nombre, email, teléfono y
             dirección de envío. Estos datos son necesarios para procesar el
-            pedido y despacharlo por Andreani.
+            pedido y despacharlo por Correo Argentino.
           </Section>
 
           <Section title="2. Uso de los datos">
@@ -38,7 +38,7 @@ export default function PrivacidadPage() {
 
           <Section title="3. Terceros">
             Compartimos datos estrictamente necesarios con: Mercado Pago (para
-            procesar el pago), Andreani (para despachar el envío) y Supabase
+            procesar el pago), Correo Argentino (para despachar el envío) y Supabase
             (como proveedor de infraestructura). No vendemos ni cedemos tus
             datos con fines comerciales.
           </Section>

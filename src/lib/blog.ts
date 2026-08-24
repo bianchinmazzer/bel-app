@@ -235,7 +235,7 @@ export const articles: Article[] = [
       {
         heading: 'Pensá en la logística',
         paragraphs: [
-          'Si estás lejos del proveedor, el envío importa. Trabajar con un distribuidor que despacha a todo el país con seguimiento —nosotros lo hacemos por Andreani— te permite abastecerte sin importar dónde tengas tu local, sin depender de retirar en persona.',
+          'Si estás lejos del proveedor, el envío importa. Trabajar con un distribuidor que despacha a todo el país con seguimiento —nosotros lo hacemos por Correo Argentino— te permite abastecerte sin importar dónde tengas tu local, sin depender de retirar en persona.',
         ],
       },
       {

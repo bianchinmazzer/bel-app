@@ -33,7 +33,7 @@ export default async function CategoriasDestacadas() {
       {/* Detalle dorado decorativo */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[78rem] mx-auto">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -61,7 +61,7 @@ export default async function CategoriasDestacadas() {
             <Link
               key={cat.id}
               href={`/tienda?categoria=${cat.slug}`}
-              className="group relative block overflow-hidden rounded-2xl bg-neutral-700 aspect-[4/3] hover:ring-2 hover:ring-primary-400 transition-all duration-300"
+              className="group relative block overflow-hidden rounded-2xl bg-neutral-700 aspect-[4/5] hover:ring-2 hover:ring-primary-400 transition-all duration-300"
             >
               {cat.image_url ? (
                 <Image
