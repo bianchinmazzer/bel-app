@@ -14,17 +14,17 @@ import {
 } from '@heroicons/react/24/outline'
 import { useCart } from '@/store/cart'
 import PriceDisplay from '@/app/components/PriceDisplay'
-import type { ShippingAddress, PaymentProvider } from '@/types/order'
+import { SNAPSHOT_KEY, type OrderSnapshot, type PayMethod } from '@/lib/order-message'
+import type { ShippingAddress } from '@/types/order'
 
-interface QuoteResponse {
-  costo_ars: number
-  metodo: string
-  dias_estimados: string
-  estimado: boolean
+/** Ícono simple de WhatsApp para el botón de coordinación manual. */
+function WhatsAppGlyph({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.966-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+    </svg>
+  )
 }
-
-/** Getnet solo se ofrece cuando está habilitado por env (credenciales listas). */
-const GETNET_ENABLED = process.env.NEXT_PUBLIC_GETNET_ENABLED === 'true'
 
 export default function CheckoutPage() {
   const { items } = useCart()
@@ -44,11 +44,10 @@ export default function CheckoutPage() {
     provincia: '',
     codigo_postal: '',
   })
-  const [shipping, setShipping] = useState<QuoteResponse | null>(null)
   const [deliveryType, setDeliveryType] = useState<'D' | 'S'>('D')
-  const [provider, setProvider] = useState<PaymentProvider>('mercadopago')
-  const [mpDiscountPercent, setMpDiscountPercent] = useState(0)
-  const [quoting, setQuoting] = useState(false)
+  const [method, setMethod] = useState<PayMethod>('mercadopago')
+  /** Descuento (%) por transferencia. Lo configura el dueño desde el admin. */
+  const [transferDiscountPercent, setTransferDiscountPercent] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,7 +55,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
-      .then((d) => setMpDiscountPercent(Number(d.mp_discount_percent) || 0))
+      .then((d) => setTransferDiscountPercent(Number(d.mp_discount_percent) || 0))
       .catch(() => {})
   }, [])
   useEffect(() => {
@@ -64,73 +63,64 @@ export default function CheckoutPage() {
   }, [mounted, items, router])
 
   const subtotal = items.reduce((sum, i) => sum + i.price_ars * i.quantity, 0)
-  const pesoTotal = items.reduce((sum, i) => sum + i.weight_grams * i.quantity, 0)
-  // La bonificación por Mercado Pago se muestra acá; el backend la recalcula y
-  // es el valor autoritativo de lo que efectivamente se cobra.
+  // El envío ya no se cotiza en el checkout: se coordina por WhatsApp con el
+  // dueño. El descuento solo aplica si el cliente elige transferencia.
   const discount =
-    provider === 'mercadopago' && mpDiscountPercent > 0
-      ? Math.round((subtotal * mpDiscountPercent) / 100)
+    method === 'transferencia' && transferDiscountPercent > 0
+      ? Math.round((subtotal * transferDiscountPercent) / 100)
       : 0
-  const total = subtotal - discount + (shipping?.costo_ars ?? 0)
-
-  // Cambiar domicilio/sucursal obliga a recotizar (cambia el precio).
-  const changeDeliveryType = (dt: 'D' | 'S') => {
-    setDeliveryType(dt)
-    setShipping(null)
-  }
-
-  const handleCotizar = async () => {
-    if (!address.codigo_postal || address.codigo_postal.length < 4) {
-      setError('Ingresá un código postal válido')
-      return
-    }
-    setError(null)
-    setQuoting(true)
-    try {
-      const res = await fetch('/api/shipping/quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cp_destino: address.codigo_postal,
-          peso_gramos: pesoTotal,
-          valor_declarado: Math.floor(subtotal / 100),
-          delivery_type: deliveryType,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error cotizando envío')
-      setShipping(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error cotizando envío')
-    } finally {
-      setQuoting(false)
-    }
-  }
+  const total = subtotal - discount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!shipping) {
-      setError('Primero cotizá el envío')
-      return
-    }
     setError(null)
     setLoading(true)
+
+    // Foto del pedido para la pantalla final (arma el WhatsApp al dueño).
+    const snapshot: OrderSnapshot = {
+      method,
+      items: items.map((i) => ({
+        name: i.name,
+        variant_label: i.variant_label,
+        quantity: i.quantity,
+        price_ars: i.price_ars,
+      })),
+      customer,
+      address,
+      deliveryType,
+      subtotal_ars: subtotal,
+      discount_ars: discount,
+      total_ars: total,
+      ref: null,
+    }
+
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          customer,
-          shipping_address: address,
-          shipping_cost_ars: shipping.costo_ars,
-          delivery_type: deliveryType,
-          provider,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error procesando el pago')
-      window.location.href = data.redirect_url
+      if (method === 'mercadopago') {
+        // Mercado Pago: creamos la orden + preferencia y redirigimos a pagar.
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items,
+            customer,
+            shipping_address: address,
+            shipping_cost_ars: 0,
+            delivery_type: deliveryType,
+            provider: 'mercadopago',
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? 'Error procesando el pago')
+        snapshot.ref = data.order_id ?? null
+        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot))
+        window.location.href = data.redirect_url
+        return
+      }
+
+      // Transferencia / 3 cuotas: no hay pasarela. Guardamos el pedido para la
+      // pantalla final, que abre WhatsApp con el detalle para coordinar.
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot))
+      router.push('/pago/exito')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error procesando el pago')
       setLoading(false)
@@ -138,6 +128,9 @@ export default function CheckoutPage() {
   }
 
   if (!mounted || items.length === 0) return null
+
+  const submitLabel =
+    method === 'mercadopago' ? 'Pagar con Mercado Pago' : 'Coordinar por WhatsApp'
 
   return (
     <main className="min-h-screen bg-neutral-50 pt-24 pb-20 px-4">
@@ -216,13 +209,13 @@ export default function CheckoutPage() {
                 {(
                   [
                     ['D', 'A domicilio', 'Te lo llevamos a la puerta'],
-                    ['S', 'A sucursal', 'Retirás en Correo Argentino'],
+                    ['S', 'A sucursal', 'Retirás en una sucursal OCA'],
                   ] as const
                 ).map(([value, title, subtitle]) => (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => changeDeliveryType(value)}
+                    onClick={() => setDeliveryType(value)}
                     className={`text-left rounded-xl border p-4 transition-colors ${
                       deliveryType === value
                         ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-100'
@@ -266,10 +259,10 @@ export default function CheckoutPage() {
 
                 {deliveryType === 'S' && (
                   <p className="text-sm text-neutral-600 bg-neutral-50 border border-primary-100 rounded-lg p-3">
-                    Retirás tu pedido en una sucursal de Correo Argentino.
-                    Ingresá tu <strong>localidad y código postal</strong> para
-                    calcular el costo; <strong>coordinamos la sucursal exacta por
-                    WhatsApp</strong> después de la compra.
+                    Retirás tu pedido en una sucursal OCA.
+                    Ingresá tu <strong>localidad y código postal</strong>;{' '}
+                    <strong>coordinamos la sucursal exacta y el costo del envío
+                    por WhatsApp</strong> después de la compra.
                   </p>
                 )}
 
@@ -287,52 +280,17 @@ export default function CheckoutPage() {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
-                  <Input
-                    label="Código postal"
-                    value={address.codigo_postal}
-                    onChange={(v) => setAddress({ ...address, codigo_postal: v })}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCotizar}
-                    disabled={quoting || !address.codigo_postal}
-                    className="bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white px-6 py-3 rounded-lg font-medium text-sm transition-colors whitespace-nowrap"
-                  >
-                    {quoting ? 'Cotizando...' : 'Cotizar envío'}
-                  </button>
-                </div>
+                <Input
+                  label="Código postal"
+                  value={address.codigo_postal}
+                  onChange={(v) => setAddress({ ...address, codigo_postal: v })}
+                  required
+                />
+                <p className="text-xs text-neutral-500">
+                  El costo del envío lo coordinamos por WhatsApp con estos datos.
+                </p>
               </div>
             </section>
-
-            {/* Envío */}
-            {shipping && (
-              <section className="bg-primary-50 rounded-2xl border border-primary-200 p-6 md:p-8">
-                <div className="flex items-center gap-2 mb-3">
-                  <TruckIcon className="w-5 h-5 text-primary-700" strokeWidth={1.5} />
-                  <h2 className="font-display font-bold text-lg text-neutral-800">
-                    Envío por Correo Argentino
-                  </h2>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-700">
-                      Entrega en {shipping.dias_estimados}
-                    </p>
-                    {shipping.estimado && (
-                      <p className="text-xs text-primary-700 mt-1">
-                        * Tarifa estimada, se confirma al despacho
-                      </p>
-                    )}
-                  </div>
-                  <PriceDisplay
-                    centavos={shipping.costo_ars}
-                    className="font-display font-bold text-xl text-neutral-900"
-                  />
-                </div>
-              </section>
-            )}
           </div>
 
           {/* Resumen */}
@@ -377,7 +335,7 @@ export default function CheckoutPage() {
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-green-700 font-medium">
-                    <span>Bonificación Mercado Pago (-{mpDiscountPercent}%)</span>
+                    <span>Descuento transferencia (-{transferDiscountPercent}%)</span>
                     <span>
                       -<PriceDisplay centavos={discount} className="inline" />
                     </span>
@@ -385,11 +343,7 @@ export default function CheckoutPage() {
                 )}
                 <div className="flex justify-between text-neutral-600">
                   <span>Envío</span>
-                  {shipping ? (
-                    <PriceDisplay centavos={shipping.costo_ars} />
-                  ) : (
-                    <span className="text-xs text-neutral-400">A cotizar</span>
-                  )}
+                  <span className="text-xs text-neutral-400">A coordinar</span>
                 </div>
               </div>
 
@@ -401,34 +355,57 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              {GETNET_ENABLED && (
-                <div className="mb-5">
-                  <p className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-                    Medio de pago
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { id: 'mercadopago', label: 'Mercado Pago' },
-                        { id: 'getnet', label: 'Getnet · 3 cuotas sin interés' },
-                      ] as const
-                    ).map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setProvider(opt.id)}
-                        className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-                          provider === opt.id
-                            ? 'border-primary-500 bg-primary-50 text-primary-800'
-                            : 'border-primary-200 bg-white text-neutral-600 hover:border-primary-300'
+              <div className="mb-5">
+                <p className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+                  Medio de pago
+                </p>
+                <div className="space-y-2">
+                  {(
+                    [
+                      {
+                        id: 'mercadopago',
+                        label: 'Mercado Pago',
+                        desc: 'Pagás online con tarjeta, dinero en cuenta o efectivo.',
+                      },
+                      {
+                        id: 'transferencia',
+                        label:
+                          transferDiscountPercent > 0
+                            ? `Transferencia · ${transferDiscountPercent}% OFF`
+                            : 'Transferencia',
+                        desc: 'Te pasamos el alias por WhatsApp para coordinar.',
+                      },
+                      {
+                        id: 'tres_cuotas',
+                        label: '3 cuotas sin interés',
+                        desc: 'Te enviamos el link de pago por WhatsApp.',
+                      },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setMethod(opt.id)}
+                      className={`w-full text-left rounded-lg border px-3 py-2.5 transition-colors ${
+                        method === opt.id
+                          ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-100'
+                          : 'border-primary-200 bg-white hover:border-primary-300'
+                      }`}
+                    >
+                      <span
+                        className={`block text-sm font-medium ${
+                          method === opt.id ? 'text-primary-800' : 'text-neutral-700'
                         }`}
                       >
                         {opt.label}
-                      </button>
-                    ))}
-                  </div>
+                      </span>
+                      <span className="block text-xs text-neutral-500 mt-0.5">
+                        {opt.desc}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">
@@ -438,21 +415,24 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={loading || !shipping}
-                className="w-full bg-neutral-800 hover:bg-primary-700 disabled:bg-neutral-300 text-white py-3.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                disabled={loading}
+                className={`w-full disabled:bg-neutral-300 text-white py-3.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                  method === 'mercadopago'
+                    ? 'bg-neutral-800 hover:bg-primary-700'
+                    : 'bg-[#25D366] hover:bg-[#1DA851]'
+                }`}
               >
-                <CreditCardIcon className="w-5 h-5" strokeWidth={1.5} />
-                <span>
-                  {loading
-                    ? 'Procesando...'
-                    : provider === 'getnet'
-                      ? 'Pagar con Getnet'
-                      : 'Pagar con Mercado Pago'}
-                </span>
+                {method === 'mercadopago' ? (
+                  <CreditCardIcon className="w-5 h-5" strokeWidth={1.5} />
+                ) : (
+                  <WhatsAppGlyph className="w-5 h-5" />
+                )}
+                <span>{loading ? 'Procesando...' : submitLabel}</span>
               </button>
               <p className="text-xs text-neutral-500 text-center mt-3">
-                Serás redirigido a {provider === 'getnet' ? 'Getnet' : 'Mercado Pago'}{' '}
-                para completar el pago de forma segura.
+                {method === 'mercadopago'
+                  ? 'Serás redirigido a Mercado Pago para completar el pago de forma segura.'
+                  : 'Te abrimos WhatsApp con el detalle del pedido ya escrito para coordinar el pago y el envío.'}
               </p>
             </div>
           </div>

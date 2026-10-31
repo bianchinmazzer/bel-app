@@ -5,48 +5,28 @@ import Link from 'next/link'
 import { CheckCircleIcon, ArrowRightIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useCart } from '@/store/cart'
 import { whatsappLink } from '@/lib/contact'
-import type { CartItem } from '@/types/cart'
-
-const SNAPSHOT_KEY = 'bel-last-order'
-
-interface OrderSnapshot {
-  items: { name: string; variant_label: string | null; quantity: number }[]
-  ref: string | null
-}
+import { buildOrderWhatsApp, SNAPSHOT_KEY, type OrderSnapshot } from '@/lib/order-message'
 
 export default function PagoExitoPage() {
-  const { items, clearCart } = useCart()
+  const { clearCart } = useCart()
   const [snapshot, setSnapshot] = useState<OrderSnapshot | null>(null)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    // Referencia del pedido que Mercado Pago agrega a la URL de retorno.
+    // El checkout deja el pedido en localStorage antes de redirigir (a Mercado
+    // Pago o directo acá). Mercado Pago, además, agrega external_reference a la
+    // URL de retorno: lo usamos como número de pedido si está.
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('external_reference')
 
-    // El carrito sigue en localStorage al volver del pago: lo capturamos
-    // para armar el mensaje de WhatsApp antes de vaciarlo.
     let snap: OrderSnapshot | null = null
-    if (items.length > 0) {
-      snap = {
-        items: items.map((i: CartItem) => ({
-          name: i.name,
-          variant_label: i.variant_label,
-          quantity: i.quantity,
-        })),
-        ref,
-      }
-      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap))
-    } else {
-      // Fallback si la página se recarga (carrito ya vacío).
-      const stored = localStorage.getItem(SNAPSHOT_KEY)
-      if (stored) {
-        try {
-          snap = JSON.parse(stored) as OrderSnapshot
-          if (ref) snap.ref = ref
-        } catch {
-          snap = null
-        }
+    const stored = localStorage.getItem(SNAPSHOT_KEY)
+    if (stored) {
+      try {
+        snap = JSON.parse(stored) as OrderSnapshot
+        if (ref) snap.ref = ref
+      } catch {
+        snap = null
       }
     }
 
@@ -56,8 +36,19 @@ export default function PagoExitoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const message = buildWhatsAppMessage(snapshot)
+  const message = snapshot
+    ? buildOrderWhatsApp(snapshot)
+    : '¡Hola! Acabo de hacer una compra y quiero coordinar el pago y el envío 📦'
   const waHref = whatsappLink(message)
+
+  // Mercado Pago ya cobró; transferencia y 3 cuotas se terminan por WhatsApp.
+  const isPaid = snapshot?.method === 'mercadopago' || snapshot == null
+
+  const badge = isPaid ? 'Pago confirmado' : 'Pedido registrado'
+  const intro = isPaid
+    ? 'Recibimos tu pago correctamente. Para coordinar la entrega, escribinos por WhatsApp 👇'
+    : 'Tu pedido está listo. Envianos el detalle por WhatsApp para coordinar el pago y el envío 👇'
+  const ctaLabel = isPaid ? 'Coordinar entrega por WhatsApp' : 'Enviar pedido por WhatsApp'
 
   return (
     <main className="min-h-screen bg-neutral-50 pt-24 pb-20 px-4">
@@ -69,20 +60,24 @@ export default function PagoExitoPage() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <span className="h-px w-8 bg-primary-500" />
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-primary-700">
-            Pago confirmado
+            {badge}
           </span>
           <span className="h-px w-8 bg-primary-500" />
         </div>
 
         <h1 className="font-display font-bold text-4xl md:text-5xl text-neutral-800 mb-4">
-          ¡Gracias por tu <span className="italic text-gradient-gold">compra</span>!
+          {isPaid ? (
+            <>
+              ¡Gracias por tu <span className="italic text-gradient-gold">compra</span>!
+            </>
+          ) : (
+            <>
+              ¡Pedido <span className="italic text-gradient-gold">listo</span>!
+            </>
+          )}
         </h1>
-        <p className="text-neutral-600 leading-relaxed mb-2 max-w-lg mx-auto">
-          Recibimos tu pago correctamente. Te enviamos un email con los detalles
-          del pedido.
-        </p>
-        <p className="text-sm text-neutral-500 mb-8">
-          Para coordinar la entrega, escribinos por WhatsApp 👇
+        <p className="text-neutral-600 leading-relaxed mb-8 max-w-lg mx-auto">
+          {intro}
         </p>
 
         {/* Botón siempre visible en la página (además del popup) */}
@@ -94,7 +89,7 @@ export default function PagoExitoPage() {
             className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white font-medium py-3 px-7 rounded-full transition-colors shadow-lg"
           >
             <WhatsAppGlyph className="w-5 h-5" />
-            <span>Coordinar entrega por WhatsApp</span>
+            <span>{ctaLabel}</span>
           </a>
         </div>
 
@@ -135,8 +130,9 @@ export default function PagoExitoPage() {
               ¡Último paso!
             </h2>
             <p className="text-neutral-600 leading-relaxed mb-6">
-              Para coordinar la entrega de tu pedido, envianos un mensaje por
-              WhatsApp. Ya lo dejamos escrito por vos.
+              {isPaid
+                ? 'Para coordinar la entrega de tu pedido, envianos un mensaje por WhatsApp. Ya lo dejamos escrito por vos.'
+                : 'Envianos este mensaje por WhatsApp para coordinar el pago y el envío. Ya lo dejamos escrito por vos.'}
             </p>
 
             <a
@@ -147,7 +143,7 @@ export default function PagoExitoPage() {
               className="inline-flex w-full items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white font-semibold py-3.5 px-7 rounded-full transition-colors shadow-lg"
             >
               <WhatsAppGlyph className="w-5 h-5" />
-              <span>Coordinar mi envío</span>
+              <span>{ctaLabel}</span>
             </a>
 
             <button
@@ -161,17 +157,6 @@ export default function PagoExitoPage() {
       )}
     </main>
   )
-}
-
-function buildWhatsAppMessage(snapshot: OrderSnapshot | null): string {
-  if (!snapshot || snapshot.items.length === 0) {
-    return '¡Hola! Acabo de hacer una compra y quiero coordinar el envío 📦'
-  }
-  const lines = snapshot.items
-    .map((i) => `• ${i.name}${i.variant_label ? ` (${i.variant_label})` : ''} ×${i.quantity}`)
-    .join('\n')
-  const ref = snapshot.ref ? `\nPedido #${snapshot.ref.slice(0, 8)}` : ''
-  return `¡Hola! Te compré:\n${lines}${ref}\n\nQuiero coordinar el envío 📦`
 }
 
 function WhatsAppGlyph({ className }: { className?: string }) {

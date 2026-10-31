@@ -3,7 +3,7 @@ import { getStoreSettings } from '@/lib/settings'
 
 /**
  * Configuración pública de la tienda (no sensible).
- * La usa el checkout para mostrar la bonificación de Mercado Pago.
+ * La usa el checkout para mostrar el descuento por transferencia.
  */
 export async function GET() {
   const settings = await getStoreSettings()

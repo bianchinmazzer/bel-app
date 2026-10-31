@@ -115,11 +115,11 @@ export default function SettingsManager({ initialSettings }: Props) {
     <div className="max-w-xl">
       <section className="bg-white rounded-2xl border border-primary-100 p-6 md:p-8">
         <h2 className="font-display font-bold text-xl text-neutral-800 mb-1">
-          Bonificación por Mercado Pago
+          Descuento por transferencia
         </h2>
         <p className="text-sm text-neutral-600 mb-6">
-          Descuento que se aplica automáticamente cuando el cliente elige pagar
-          con Mercado Pago. Poné <strong>0</strong> para desactivarlo.
+          Descuento que se muestra cuando el cliente elige pagar por
+          transferencia. Poné <strong>0</strong> para desactivarlo.
         </p>
 
         <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">

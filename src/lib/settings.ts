@@ -9,7 +9,10 @@ export interface BoxDimensions {
 
 /** Configuración de tienda editable desde el panel admin. */
 export interface StoreSettings {
-  /** Bonificación (%) que se aplica al pagar con Mercado Pago. 0–100. */
+  /**
+   * Descuento (%) que se muestra al pagar por transferencia. 0–100.
+   * (La columna conserva el nombre `mp_discount_percent` por compatibilidad.)
+   */
   mp_discount_percent: number
   /** Caja estándar de despacho, usada para cotizar el volumen del envío. */
   box: BoxDimensions
